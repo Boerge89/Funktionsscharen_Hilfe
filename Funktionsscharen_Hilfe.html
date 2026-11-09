@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interaktive Hilfen: Funktionsscharen & Analysis</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- MathJax für mathematische Formeln -->
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans">
+
+    <!-- Header -->
+    <header class="bg-indigo-700 text-white shadow-md py-6 px-4 mb-6">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight">Interaktives Hilfesystem</h1>
+                <p class="text-indigo-200 text-sm mt-1">Stufenweise Unterstützung für alle Aufgaben aus dem Trainingsblatt und den Buchseiten</p>
+            </div>
+            <span class="bg-indigo-800 text-indigo-100 text-xs px-3 py-1.5 rounded-full font-medium border border-indigo-600">
+                2-Stufiges Hilfekonzept
+            </span>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-4 flex-grow w-full pb-12">
+
+        <!-- Navigation / Task Selector -->
+        <div class="mb-8 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">Aufgabe auswählen:</h2>
+            <div class="flex flex-wrap gap-2" id="task-nav">
+                <!-- Nav buttons generated dynamically -->
+            </div>
+        </div>
+
+        <!-- Task Container -->
+        <div id="task-container" class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden">
+            <!-- Header of selected task -->
+            <div class="bg-slate-100 border-b border-slate-200 p-6 flex justify-between items-center flex-wrap gap-4">
+                <div>
+                    <span id="task-badge" class="bg-indigo-100 text-indigo-800 text-xs font-bold px-2.5 py-1 rounded">Aufgabe O1</span>
+                    <h3 id="task-title" class="text-xl font-bold text-slate-900 mt-2">Untersuchung der Schar</h3>
+                </div>
+            </div>
+
+            <!-- Subtask Tabs -->
+            <div class="bg-slate-50 border-b border-slate-200 px-6 flex gap-2 overflow-x-auto" id="subtask-tabs">
+                <!-- Tabs generated dynamically -->
+            </div>
+
+            <!-- Subtask Description & Interactive Hints Area -->
+            <div class="p-6">
+                <!-- Task Prompt -->
+                <div class="mb-6 p-4 bg-slate-50 border-l-4 border-indigo-500 rounded-r-lg">
+                    <h4 class="font-semibold text-slate-700 text-sm mb-1">Aufgabenstellung:</h4>
+                    <div id="subtask-prompt" class="text-slate-800 text-base">
+                        <!-- Subtask text -->
+                    </div>
+                </div>
+
+                <!-- Interactive Help Section -->
+                <div class="space-y-4">
+                    
+                    <!-- Stage 1 Help Card -->
+                    <div class="border border-slate-200 rounded-lg overflow-hidden transition-all duration-200">
+                        <button onclick="toggleHint(1)" class="w-full bg-slate-100 hover:bg-slate-200 p-4 text-left flex justify-between items-center transition-colors">
+                            <span class="font-semibold text-indigo-900 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Stufe 1: Denkimpuls & Hinweis
+                            </span>
+                            <span id="hint1-icon" class="text-slate-500 font-bold text-lg">+</span>
+                        </button>
+                        <div id="hint1-content" class="hidden p-5 bg-indigo-50/50 border-t border-slate-200 text-slate-700 leading-relaxed">
+                            <!-- Hint 1 content -->
+                        </div>
+                    </div>
+
+                    <!-- Stage 2 Help Card -->
+                    <div class="border border-slate-200 rounded-lg overflow-hidden transition-all duration-200">
+                        <button onclick="toggleHint(2)" class="w-full bg-slate-100 hover:bg-slate-200 p-4 text-left flex justify-between items-center transition-colors">
+                            <span class="font-semibold text-indigo-900 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                Stufe 2: Lückentext mit Auswahlfeldern
+                            </span>
+                            <span id="hint2-icon" class="text-slate-500 font-bold text-lg">+</span>
+                        </button>
+                        <div id="hint2-content" class="hidden p-5 bg-white border-t border-slate-200">
+                            <p class="text-xs text-slate-500 mb-4 font-medium uppercase tracking-wider">Fülle die Lücken aus und überprüfe deine Eingabe:</p>
+                            <form id="cloze-form" onsubmit="checkCloze(event)" class="space-y-4 text-slate-800 leading-relaxed">
+                                <!-- Cloze content dynamically built -->
+                            </form>
+                            <div class="mt-4 flex items-center gap-3">
+                                <button onclick="checkCloze(event)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2.5 rounded-lg shadow-sm transition-colors text-sm">
+                                    Antworten prüfen
+                                </button>
+                                <span id="cloze-feedback" class="text-sm font-semibold"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Data Script -->
+    <script>
+        const tasksData = [
+            // --- ARBEITSBLATT (PDF): AUFGABE O1 ---
+            {
+                id: "O1",
+                title: "Arbeitsblatt O1: Funktionsschar $f_a(x) = x^2 + ax + a$",
+                subtasks: [
+                    {
+                        id: "a",
+                        label: "Teil a",
+                        prompt: "Geben Sie mithilfe der Abbildung den Wert von $a$ an, der für den Graphen verwendet wurde.",
+                        hint1: "Lies den y-Achsenabschnitt $f_a(0)$ direkt aus dem Koordinatensystem ab ($y = 0{,}5$). Setze anschließend $x = 0$ in die Funktionsgleichung $f_a(x) = x^2 + ax + a$ ein.",
+                        cloze: {
+                            template: "Für $x = 0$ liefert die Funktionsgleichung $f_a(0) = $ {gap0}. Aus der Abbildung liest man den Schnittpunkt mit der y-Achse bei $(0 \\mid$ {gap1}$)$ ab. Daraus folgt direkt für den Parameter $a = $ {gap2}.",
+                            gaps: [
+                                { id: "gap0", options: ["x", "a", "0"], correct: "a" },
+                                { id: "gap1", options: ["0,25", "0,5", "1,0"], correct: "0,5" },
+                                { id: "gap2", options: ["0,5", "1,0", "-0,5"], correct: "0,5" }
+                            ]
+                        }
+                    },
+                    {
+                        id: "b",
+                        label: "Teil b",
+                        prompt: "Zeigen Sie rechnerisch, dass jede Funktion der Schar eine Minimalstelle hat.",
+                        hint1: "Leite die Funktion $f_a(x)$ nach $x$ ab. Setze die 1. Ableitung gleich 0, um die Extremstelle zu bestimmen, und prüfe das Vorzeichen der 2. Ableitung.",
+                        cloze: {
+                            template: "Die 1. Ableitung lautet $f_a'(x) = 2x + a$. Das Nullsetzen $2x + a = 0$ führt zu $x = $ {gap0}. Die 2. Ableitung ist $f_a''(x) = $ {gap1}. Da diese stets größer als 0 ist, liegt für jeden Parameter $a$ eine {gap2} vor.",
+                            gaps: [
+                                { id: "gap0", options: ["-a/2", "a/2", "-2a"], correct: "-a/2" },
+                                { id: "gap1", options: ["2", "a", "2x"], correct: "2" },
+                                { id: "gap2", options: ["Minimalstelle", "Maximalstelle", "Sattelstelle"], correct: "Minimalstelle" }
+                            ]
+                        }
+                    },
+                    {
+                        id: "c",
+                        label: "Teil c",
+                        prompt: "Bestimmen Sie den Wert von $a$ so, dass die Minimalstelle aus Teilaufgabe b) bei $x = 2$ liegt.",
+                        hint1: "Setze den in Teil b) ermittelten Term für die Minimalstelle ($x = -\\frac{a}{2}$) gleich 2 und löse nach $a$ auf.",
+                        cloze: {
+                            template: "Setze die Bedingung an: $-\\frac{a}{2} = $ {gap0}. Durch Multiplikation mit $-2$ erhält man als Ergebnis $a = $ {gap1}.",
+                            gaps: [
+                                { id: "gap0", options: ["2", "0", "-2"], correct: "2" },
+                                { id: "gap1", options: ["-4", "4", "-2"], correct: "-4" }
+                            ]
+                        }
+                    },
+                    {
+                        id: "d",
+                        label: "Teil d",
+                        prompt: "Begründen Sie, dass der Graph von $f_a$ für kein $a$ punktsymmetrisch zum Koordinatenursprung ist.",
+                        hint1: "Prüfe die Symmetriebedingung $f_a(-x) = -f_a(x)$ oder betrachte die Exponenten im Funktionsterm $x^2 + ax + a$.",
+                        cloze: {
+                            template: "Für Punktsymmetrie zum Ursprung dürften nur {gap0} Exponenten vorkommen. Der Term $x^2$ besitzt jedoch einen {gap1} Exponenten. Da dieser Term für kein $a$ wegfällt, ist der Graph für kein $a$ punktsymmetrisch.",
+                            gaps: [
+                                { id: "gap0", options: ["ungerade", "gerade"], correct: "ungerade" },
+                                { id: "gap1", options: ["geraden", "ungeraden"], correct: "geraden" }
+                            ]
+                        }
+                    },
+                    {
+                        id: "e",
+                        label: "Teil e",
+                        prompt: "Geben Sie einen Wert von $a$ so an, dass der Graph von $f_a$ symmetrisch zur y-Achse ist.",
+                        hint1: "Damit ein Graph achsensymmetrisch zur y-Achse ist, dürfen nur gerade Exponenten vorkommen. Welcher Teilterm stört und wie wird er durch $a$ zu Null?",
+                        cloze: {
+                            template: "Achsensymmetrie zur y-Achse erfordert, dass das ungerade Glied {gap0} verschwindet. Dies wird erreicht, indem man den Parameter $a = $ {gap1} wählt.",
+                            gaps: [
+                                { id: "gap0", options: ["ax", "x²", "a"], correct: "ax" },
+                                { id: "gap1", options: ["0", "1", "-1"], correct: "0" }
+                            ]
+                        }
+                    }
+                ]
+            },
+
+            // --- ARBEITSBLATT (PDF): AUFGABE O2 ---
+            {
+                id: "O2",
+                title: "Arbeitsblatt O2: Zuordnung der Funktionsscharen zu den Graphen",
+                subtasks: [
+                    {
+                        id: "zuordnung",
+                        label: "Zuordnung I bis IV",
+                        prompt: "Ordnen Sie die Scharen $f_k, g_k, h_k, i_k, j_k$ den Abbildungen I bis IV begründet zu. Eine Schar bleibt übrig.",
+                        hint1: "Achte auf Verschiebungen in x- und y-Richtung sowie das Verhalten bei negativen Parameterwerten (z. B. $k = -3$).",
+                        cloze: {
+                            template: "Abbildung I zeigt eine Verschiebung nach oben/unten (y-Richtung). Dazu passt die Schar {gap0}. Abbildung II zeigt eine Verschiebung nach rechts/links (x-Richtung) durch die Klammer. Dazu passt {gap1}. Abbildung III ist punktsymmetrisch zum Ursprung und zeigt für $k=-3$ ein invertiertes Verhalten. dazu passt {gap2}. Abbildung IV zeigt eine Streckung/Stauchung bei erhaltenem Ursprung. Eine Schar bleibt übrig: {gap3}.",
+                            gaps: [
+                                { id: "gap0", options: ["i_k(x) = x³ - x + k", "h_k(x) = (x-k)³ - x", "f_k(x) = k·x³ - x"], correct: "i_k(x) = x³ - x + k" },
+                                { id: "gap1", options: ["h_k(x) = (x-k)³ - x", "g_k(x) = x³ - k·x", "j_k(x) = k·x³ - k·x"], correct: "h_k(x) = (x-k)³ - x" },
+                                { id: "gap2", options: ["g_k(x) = x³ - k·x", "f_k(x) = k·x³ - x", "j_k(x) = k·x³ - k·x"], correct: "g_k(x) = x³ - k·x" },
+                                { id: "gap3", options: ["j_k(x) = k·x³ - k·x", "f_k(x) = k·x³ - x", "i_k(x) = x³ - x + k"], correct: "j_k(x) = k·x³ - k·x" }
+                            ]
+                        }
+                    }
+                ]
+            },
+
+            // --- ARBEITSBLATT (PDF): AUFGABE O3 ---
+            {
+                id: "O3",
+                title: "Arbeitsblatt O3: Auswirkung einer Veränderung von $k$",
+                subtasks: [
+                    {
+                        id: "tabelle",
+                        label: "Tabelle ankreuzen",
+                        prompt: "Überprüfen Sie, wie sich eine Veränderung des Parameters $k$ auf die Graphen der Schar auswirkt.",
+                        hint1: "Untersuche die Stellung des Parameters $k$: Steht $k$ als Faktor vor $x^2$, als Summand am Ende, in einer Binom-Klammer oder im Exponenten?",
+                        cloze: {
+                            template: "a) $f_k(x) = k \cdot x^2 + x$ bewirkt eine {gap0}.<br>b) $f_k(x) = x^2 + k$ bewirkt eine {gap1}.<br>c) $f_k(x) = x^2 - 2kx + k^2 = (x-k)^2$ bewirkt eine {gap2}.<br>d) $f_k(x) = 2x^3 + kx + k$ bewirkt {gap3}.<br>e) $f_k(x) = 2^{x+k}$ bewirkt eine {gap4}.",
+                            gaps: [
+                                { id: "gap0", options: ["Streckung in y-Richtung", "Verschiebung in x-Richtung", "Verschiebung in y-Richtung", "nichts davon"], correct: "Streckung in y-Richtung" },
+                                { id: "gap1", options: ["Verschiebung in y-Richtung", "Verschiebung in x-Richtung", "Streckung in y-Richtung", "nichts davon"], correct: "Verschiebung in y-Richtung" },
+                                { id: "gap2", options: ["Verschiebung in x-Richtung", "Verschiebung in y-Richtung", "Streckung in y-Richtung", "nichts davon"], correct: "Verschiebung in x-Richtung" },
+                                { id: "gap3", options: ["nichts davon", "Verschiebung in x-Richtung", "Verschiebung in y-Richtung"], correct: "nichts davon" },
+                                { id: "gap4", options: ["Verschiebung in x-Richtung", "Verschiebung in y-Richtung", "Streckung in y-Richtung"], correct: "Verschiebung in x-Richtung" }
+                            ]
+                        }
+                    }
+                ]
+            },
+
+            // --- BILDDATEIEN: AUFGABE 3 ---
+            {
+                id: "3",
+                title: "Buchaufgabe 3: Nachweis gemeinsamer Punkte $P$",
+                subtasks: [
+                    {
+                        id: "3a",
+                        label: "Teil a",
+                        prompt: "Zeigen Sie, dass alle Graphen von $f_a(x) = 2x^4 - ax^2 - 3x + a$ durch $P(1 \\mid -1)$ verlaufen.",
+                        hint1: "Setze den x-Wert $x = 1$ in $f_a(x)$ ein und vereinfache den Term. Zeige, dass $a$ entfällt und stets $-1$ herauskommt.",
+                        cloze: {
+                            template: "Einsetzen von $x = 1$: $f_a(1) = 2(1)^4 - a(1)^2 - 3(1) + a = 2 - a - 3 + a$. Die Terme mit $a$ ergeben zusammen {gap0}. Es verbleibt der Wert {gap1}, der genau dem y-Wert von $P$ entspricht.",
+                            gaps: [
+                                { id: "gap0", options: ["0", "2a", "-2a"], correct: "0" },
+                                { id: "gap1", options: ["-1", "1", "0"], correct: "-1" }
+                            ]
+                        }
+                    },
+                    {
+                        id: "3b",
+                        label: "Teil b",
+                        prompt: "Zeigen Sie, dass alle Graphen von $f_a(x) = -ax^4 + x^3 - 3x^2 + 4ax + 8a$ durch $P(2 \\mid -4)$ verlaufen.",
+                        hint1: "Setze $x = 2$ in $f_a(x)$ ein. Fasse die Terme mit $a$ und die reinen Zahlen zusammen.",
+                        cloze: {
+                            template: "Einsetzen von $x = 2$: $f_a(2) = -a(16) + 8 - 3(4) + 4a(2) + 8a = -16a + 8 - 12 + 8a + 8a$. Die Summe der $a$-Terme ist $-16a + 16a = $ {gap0}. Aus $8 - 12$ folgt der Wert {gap1}.",
+                            gaps: [
+                                { id: "gap0", options: ["0", "8a", "-8a"], correct: "0" },
+                                { id: "gap1", options: ["-4", "4", "-8"], correct: "-4" }
+                            ]
+                        }
+                    },
+                    {
+                        id: "3c",
+                        label: "Teil c",
+                        prompt: "Zeigen Sie, dass alle Graphen von $f_a(x) = x^3 - ax^2 - 5x + 9a$ durch $P(3 \\mid 12)$ verlaufen.",
+                        hint1: "Setze $x = 3$ in den Funktionsterm ein und berechne $f_a(3)$.",
+                        cloze: {
+                            template: "Einsetzen von $x = 3$: $f_a(3) = 3^3 - a(3^2) - 5(3) + 9a = 27 - 9a - 15 + 9a$. Die $a$-Terme heben sich auf zu {gap0}. Aus $27 - 15$ ergibt sich der y-Wert {gap1}.",
+                            gaps: [
+                                { id: "gap0", options: ["0", "18a", "-9a"], correct: "0" },
+                                { id: "gap1", options: ["12", "-12", "27"], correct: "12" }
+                            ]
+                        }
+                    },
+                    {
+                        id: "3d",
+                        label: "Teil d",
+                        prompt: "Zeigen Sie, dass alle Graphen von $f_a(x) = x^4 - ax^3 - 2x - a$ durch $P(-1 \\mid 3)$ verlaufen.",
+                        hint1: "Achte beim Einsetzen von $x = -1$ auf die Klammern bei negativen Basen und ungeraden Exponenten!",
+                        cloze: {
+                            template: "Einsetzen von $x = -1$: $f_a(-1) = (-1)^4 - a(-1)^3 - 2(-1) - a = 1 - a(-1) + 2 - a = 1 + a + 2 - a$. Das $a$ hebt sich auf ({gap0}) und als Summe verbleibt {gap1}.",
+                            gaps: [
+                                { id: "gap0", options: ["0", "2a", "-2a"], correct: "0" },
+                                { id: "gap1", options: ["3", "-3", "1"], correct: "3" }
+                            ]
+                        }
+                    }
+                ]
+            },
+
+            // --- BILDDATEIEN: AUFGABE 4 ---
+            {
+                id: "4",
+                title: "Buchaufgabe 4: Extremstellen von Scharen ($a > 0$)",
+                subtasks: [
+                    {
+                        id: "4a",
+                        label: "Teil a ($f_a$)",
+                        prompt: "Berechnen Sie für $f_a(x) = x^2 - ax - 2$ ($a > 0$) die Art und Lage der Extremstellen in Abhängigkeit von $a$.",
+                        hint1: "Bilde die 1. Ableitung $f_a'(x) = 2x - a$, setze sie gleich 0 und bestimme die Extremstelle $x$. Nutze die 2. Ableitung für die Art.",
+                        cloze: {
+                            template: "Die 1. Ableitung $f_a'(x) = 2x - a$ liefert nach Nullsetzen die Extremstelle $x = $ {gap0}. Da die 2. Ableitung $f_a''(x) = $ {gap1} positiv ist, handelt es sich stets um ein {gap2}.",
+                            gaps: [
+                                { id: "gap0", options: ["a/2", "-a/2", "2a"], correct: "a/2" },
+                                { id: "gap1", options: ["2", "a", "2x"], correct: "2" },
+                                { id: "gap2", options: ["Minimum", "Maximum", "Sattelpunkt"], correct: "Minimum" }
+                            ]
+                        }
+                    },
+                    {
+                        id: "4ab",
+                        label: "Teil a ($g_a, h_a$)",
+                        prompt: "Berechnen Sie die Extremstellen für $g_a(x) = 2ax^3 - 6x$ und $h_a(x) = -\\frac{1}{5}x^3 + \\frac{3}{5}ax^2$ ($a > 0$).",
+                        hint1: "Setze die 1. Ableitungen gleich 0. Bei $g_a$ erhältst du $6ax^2 - 6 = 0$. Bei $h_a$ klammere $x$ aus.",
+                        cloze: {
+                            template: "Für $g_a(x)$ gilt $g_a'(x) = 6ax^2 - 6 = 0 \\Rightarrow x^2 = \\frac{1}{a} \\Rightarrow x_{1/2} = \\pm$ {gap0}. Für $h_a(x)$ lautet die Ableitung $h_a'(x) = -\\frac{3}{5}x^2 + \\frac{6}{5}ax = 0$. Ausklammern von $x$ ergibt $x_1 = 0$ und $x_2 = $ {gap1}.",
+                            gaps: [
+                                { id: "gap0", options: ["1/\\sqrt{a}", "1/a", "\\sqrt{a}"], correct: "1/\\sqrt{a}" },
+                                { id: "gap1", options: ["2a", "a", "-2a"], correct: "2a" }
+                            ]
+                        }
+                    },
+                    {
+                        id: "4b",
+                        label: "Teil b ($a=1$)",
+                        prompt: "Ermitteln Sie für $a = 1$ jeweils die Schnittpunkte mit den Achsen sowie Hoch- und Tiefpunkte für $f_1, g_1, h_1$.",
+                        hint1: "Setze $a=1$ in die Schargleichungen ein. Bestimme die y-Achsenabschnitte $f(0)$ und die Nullstellen $f(x)=0$.",
+                        cloze: {
+                            template: "Für $f_1(x) = x^2 - x - 2$ ist der y-Achsenabschnitt $(0 \\mid -2)$ und die Nullstellen liegen bei $x_1 = -1$ und $x_2 = $ {gap0}. Für $g_1(x) = 2x^3 - 6x$ liegen die Nullstellen bei $x=0$ und $x = \\pm$ {gap1}.",
+                            gaps: [
+                                { id: "gap0", options: ["2", "1", "-2"], correct: "2" },
+                                { id: "gap1", options: ["\\sqrt{3}", "3", "6"], correct: "\\sqrt{3}" }
+                            ]
+                        }
+                    }
+                ]
+            },
+
+            // --- BILDDATEIEN: AUFGABE 6 ---
+            {
+                id: "6",
+                title: "Buchaufgabe 6: Wendestelle & Wendetangenten",
+                subtasks: [
+                    {
+                        id: "6a",
+                        label: "Teil a",
+                        prompt: "Zeigen Sie für $g_k(x) = \\frac{1}{12}x^3 - \\frac{k}{4}x^2 + \\frac{k^2+2}{4}x - \\frac{1}{4}$, dass alle Graphen genau eine Wendestelle bei $x = k$ haben.",
+                        hint1: "Bilde die 1. und 2. Ableitung nach $x$. Setze die 2. Ableitung $g_k''(x)$ gleich 0.",
+                        cloze: {
+                            template: "Die 1. Ableitung lautet $g_k'(x) = \\frac{1}{4}x^2 - \\frac{k}{2}x + \\frac{k^2+2}{4}$. Die 2. Ableitung ist $g_k''(x) = $ {gap0}. Das Nullsetzen $\\frac{1}{2}x - \\frac{k}{2} = 0$ ergibt direkt $x = $ {gap1}.",
+                            gaps: [
+                                { id: "gap0", options: ["1/2 x - k/2", "1/4 x - k", "x - k"], correct: "1/2 x - k/2" },
+                                { id: "gap1", options: ["k", "0", "-k"], correct: "k" }
+                            ]
+                        }
+                    },
+                    {
+                        id: "6b",
+                        label: "Teil b",
+                        prompt: "Zeigen Sie, dass die Wendetangenten aller Graphen der Schar parallel verlaufen.",
+                        hint1: "Die Steigung der Wendetangente entspricht dem Wert der 1. Ableitung an der Wendestelle, also $g_k'(k)$.",
+                        cloze: {
+                            template: "Setze $x = k$ in $g_k'(x)$ ein: $g_k'(k) = \\frac{1}{4}k^2 - \\frac{k}{2} \\cdot k + \\frac{k^2+2}{4} = \\frac{k^2}{4} - \\frac{2k^2}{4} + \\frac{k^2+2}{4} = $ {gap0}. Da diese Steigung stets konstant ist und unabhängig von $k$ den Wert {gap1} hat, verlaufen alle Wendetangenten parallel.",
+                            gaps: [
+                                { id: "gap0", options: ["2/4", "k²/4", "0"], correct: "2/4" },
+                                { id: "gap1", options: ["0,5", "1", "0"], correct: "0,5" }
+                            ]
+                        }
+                    }
+                ]
+            },
+
+            // --- BILDDATEIEN: AUFGABE 10 ---
+            {
+                id: "10",
+                title: "Buchaufgabe 10: Bergbahn-Seil",
+                subtasks: [
+                    {
+                        id: "10ab",
+                        label: "Teil a & b",
+                        prompt: "Beschreiben Sie die Wirkung einer Erhöhung des Parameters $c$ und erläutern Sie $P(0 \\mid 500)$ sowie $Q(1500 \\mid 2000)$ im Kontext.",
+                        hint1: "Betrachte $f_c(x) = \\frac{1+c}{1500^2}x^3 - cx + 500$. Was bedeuten $x=0$ und $x=1500$ für die Standorte der Masten?",
+                        cloze: {
+                            template: "Der Punkt $P(0 \\mid 500)$ gibt an, dass das Seil am Startmasten ($x=0$) eine Höhe von {gap0} m über dem Meeresspiegel hat. $Q(1500 \\mid 2000)$ ist der Endpunkt am Masten bei 1500m mit Höhe {gap1} m. Eine Erhöhung von $c$ verändert die Durchhangtiefe des Seils.",
+                            gaps: [
+                                { id: "gap0", options: ["500", "1500", "2000"], correct: "500" },
+                                { id: "gap1", options: ["2000", "1500", "500"], correct: "2000" }
+                            ]
+                        }
+                    },
+                    {
+                        id: "10cd",
+                        label: "Teil c & d",
+                        prompt: "Zeigen Sie, dass der Graph von $f_{-1}$ eine Gerade ist, und bestimmen Sie den Durchhang 500m nach dem Start für $f_{-0{,}9}$.",
+                        hint1: "Setze $c = -1$ in den Koeffizienten vor $x^3$ ein. Für Teil d) berechne die Höhe der geraden Verbindungslinie bei $x=500$ und vergleiche mit $f_{-0{,}9}(500)$.",
+                        cloze: {
+                            template: "Für $c = -1$ wird der Vorfaktor von $x^3$ zu $\\frac{1+(-1)}{1500^2} = $ {gap0}, wodurch der kubische Term entfällt. Die lineare Verbindung zwischen $P(0 \\mid 500)$ und $Q(1500 \\mid 2000)$ lautet $g(x) = 500 + \\frac{1}{1500}(1500)x$. Bei $x=500$ beträgt die geradlinige Höhe $1000$ m. $f_{-0{,}9}(500) = \\frac{0{,}1}{1500^2}(500)^3 - (-0{,}9)(500) + 500 = $ {gap1} m. Der Durchhang beträgt somit $1000 - 955{,}56 = 44{,}44$ m.",
+                            gaps: [
+                                { id: "gap0", options: ["0", "1", "-1"], correct: "0" },
+                                { id: "gap1", options: ["955,56", "900", "1000"], correct: "955,56" }
+                            ]
+                        }
+                    }
+                ]
+            },
+
+            // --- BILDDATEIEN: AUFGABE 11 ---
+            {
+                id: "11",
+                title: "Buchaufgabe 11: Straßenverbindung",
+                subtasks: [
+                    {
+                        id: "11a",
+                        label: "Teil a",
+                        prompt: "Bestimmen Sie die Parameter $b$ und $d$ der neuen Straßenfunktion $f(x) = \\frac{1}{b}(d - x^2)^2$.",
+                        hint1: "Aus der Abbildung liest man ab: Bei $x = 0$ ist $y = 10$ ($f(0)=10$). Bei $x = 30$ mündet die Straße auf der x-Achse ($f(30)=0$).",
+                        cloze: {
+                            template: "Aus $f(30) = \\frac{1}{b}(d - 30^2)^2 = 0$ folgt $d = 30^2 = $ {gap0}. Aus $f(0) = \\frac{1}{b}(d^2) = 10$ folgt $\\frac{900^2}{b} = 10$, woraus $b = $ {gap1} resultiert.",
+                            gaps: [
+                                { id: "gap0", options: ["900", "30", "10"], correct: "900" },
+                                { id: "gap1", options: ["81000", "9000", "8100"], correct: "81000" }
+                            ]
+                        }
+                    },
+                    {
+                        id: "11bc",
+                        label: "Teil b & c",
+                        prompt: "Prüfen Sie, ob der Übergang knickfrei ist, und erläutern Sie, welcher Parameter bei verändertem Straßenabstand angepasst werden muss.",
+                        hint1: "Knickfrei bedeutet, dass die Steigung $f'(x)$ an den Übergängen $x=0$ und $x=30$ gleich 0 ist.",
+                        cloze: {
+                            template: "Die 1. Ableitung lautet $f'(x) = \\frac{2}{81000}(900 - x^2) \\cdot (-2x)$. Für $x=0$ ist $f'(0) = 0$. Für $x=30$ ist $f'(30) = \\frac{2}{81000}(900-900)(-60) = $ {gap0}. Die Übergänge sind also knickfrei. Ändert sich der Abstand der Straßen (y-Höhe bei $x=0$), muss Parameter {gap1} angepasst werden.",
+                            gaps: [
+                                { id: "gap0", options: ["0", "10", "-1"], correct: "0" },
+                                { id: "gap1", options: ["b", "d", "x"], correct: "b" }
+                            ]
+                        }
+                    }
+                ]
+            }
+        ];
+
+        let currentTaskIdx = 0;
+        let currentSubtaskIdx = 0;
+
+        function initNav() {
+            const navContainer = document.getElementById("task-nav");
+            navContainer.innerHTML = "";
+            tasksData.forEach((task, idx) => {
+                const btn = document.createElement("button");
+                btn.className = `px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${idx === currentTaskIdx ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`;
+                btn.innerText = task.id;
+                btn.onclick = () => selectTask(idx);
+                navContainer.appendChild(btn);
+            });
+            renderTask();
+        }
+
+        function selectTask(idx) {
+            currentTaskIdx = idx;
+            currentSubtaskIdx = 0;
+            initNav();
+        }
+
+        function renderTask() {
+            const task = tasksData[currentTaskIdx];
+            document.getElementById("task-badge").innerText = `Aufgabe ${task.id}`;
+            document.getElementById("task-title").innerText = task.title;
+
+            // Render Subtask Tabs
+            const tabsContainer = document.getElementById("subtask-tabs");
+            tabsContainer.innerHTML = "";
+            task.subtasks.forEach((sub, idx) => {
+                const btn = document.createElement("button");
+                btn.className = `py-3 px-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${idx === currentSubtaskIdx ? 'border-indigo-600 text-indigo-600 font-semibold' : 'border-transparent text-slate-500 hover:text-slate-700'}`;
+                btn.innerText = sub.label;
+                btn.onclick = () => selectSubtask(idx);
+                tabsContainer.appendChild(btn);
+            });
+
+            renderSubtask();
+        }
+
+        function selectSubtask(idx) {
+            currentSubtaskIdx = idx;
+            renderTask();
+        }
+
+        function renderSubtask() {
+            const subtask = tasksData[currentTaskIdx].subtasks[currentSubtaskIdx];
+            
+            // Prompt
+            document.getElementById("subtask-prompt").innerHTML = subtask.prompt;
+            
+            // Hint 1
+            document.getElementById("hint1-content").innerHTML = subtask.hint1;
+            document.getElementById("hint1-content").classList.add("hidden");
+            document.getElementById("hint1-icon").innerText = "+";
+
+            // Hint 2 (Cloze)
+            const clozeForm = document.getElementById("cloze-form");
+            document.getElementById("hint2-content").classList.add("hidden");
+            document.getElementById("hint2-icon").innerText = "+";
+            document.getElementById("cloze-feedback").innerText = "";
+
+            // Build Cloze Template
+            let html = subtask.cloze.template;
+            subtask.cloze.gaps.forEach(gap => {
+                let selectHtml = `<select id="${gap.id}" class="mx-1 px-2.5 py-1 bg-slate-50 border border-slate-300 rounded font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">`;
+                selectHtml += `<option value="">-- wählen --</option>`;
+                gap.options.forEach(opt => {
+                    selectHtml += `<option value="${opt}">${opt}</option>`;
+                });
+                selectHtml += `</select>`;
+                html = html.replace(`{${gap.id}}`, selectHtml);
+            });
+
+            clozeForm.innerHTML = html;
+
+            // Typeset MathJax
+            if (window.MathJax) {
+                MathJax.typesetPromise();
+            }
+        }
+
+        function toggleHint(level) {
+            const content = document.getElementById(`hint${level}-content`);
+            const icon = document.getElementById(`hint${level}-icon`);
+            if (content.classList.contains("hidden")) {
+                content.classList.remove("hidden");
+                icon.innerText = "−";
+            } else {
+                content.classList.add("hidden");
+                icon.innerText = "+";
+            }
+        }
+
+        function checkCloze(event) {
+            event.preventDefault();
+            const subtask = tasksData[currentTaskIdx].subtasks[currentSubtaskIdx];
+            let allCorrect = true;
+            let count = 0;
+
+            subtask.cloze.gaps.forEach(gap => {
+                const select = document.getElementById(gap.id);
+                if (select.value === gap.correct) {
+                    select.classList.remove("border-red-500", "bg-red-50");
+                    select.classList.add("border-green-500", "bg-green-50");
+                    count++;
+                } else {
+                    select.classList.remove("border-green-500", "bg-green-50");
+                    select.classList.add("border-red-500", "bg-red-50");
+                    allCorrect = false;
+                }
+            });
+
+            const feedback = document.getElementById("cloze-feedback");
+            if (allCorrect) {
+                feedback.className = "text-sm font-semibold text-emerald-600";
+                feedback.innerText = "✓ Super! Alles richtig gelöst.";
+            } else {
+                feedback.className = "text-sm font-semibold text-rose-600";
+                feedback.innerText = `! ${count} von ${subtask.cloze.gaps.length} Lücken richtig. Überprüfe die rot markierten Felder.`;
+            }
+        }
+
+        // Initialize on load
+        window.onload = initNav;
+    </script>
+</body>
+</html>
